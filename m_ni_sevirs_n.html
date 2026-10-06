@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Məni sevirsən? 💕</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Outfit:wght@400;600;800&display=swap');
+
+        * {
+            font-family: 'Outfit', 'Fredoka', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Gradient background with floating animation effect */
+        body {
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Evasive button transitions */
+        .evasive-btn {
+            transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.2s ease, left 0.2s ease;
+            will-change: transform, top, left;
+        }
+
+        /* Floating background hearts */
+        .floating-heart {
+            position: absolute;
+            pointer-events: none;
+            animation: floatUp linear infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(105vh) scale(0.5) rotate(0deg);
+                opacity: 0.1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-10vh) scale(1.3) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Breathing pulse glow for Yes button */
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7); }
+            70% { box-shadow: 0 0 0 18px rgba(236, 72, 153, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(236, 72, 153, 0); }
+        }
+
+        /* Canvas full screen overlay */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex items-center justify-center p-4 relative overflow-hidden">
+
+    <!-- Sound Toggle Button -->
+    <button id="sound-toggle" class="fixed top-5 right-5 z-40 bg-white/60 hover:bg-white/90 text-pink-600 p-3 rounded-full shadow-lg backdrop-blur-md transition-all duration-300 transform hover:scale-110 active:scale-95" aria-label="Audio Toggle">
+        <i class="fa-solid fa-volume-high text-xl" id="sound-icon"></i>
+    </button>
+
+    <!-- Background Floating Hearts Container -->
+    <div id="hearts-container" class="absolute inset-0 pointer-events-none overflow-hidden z-0"></div>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Main Interactive Card -->
+    <main id="main-card" class="glass-card rounded-3xl p-6 sm:p-10 max-w-lg w-full text-center relative z-10 transform transition-all duration-500 scale-100">
+        
+        <!-- Animated Love SVG Graphic Header -->
+        <div class="relative w-32 h-32 mx-auto mb-6 flex items-center justify-center">
+            <div class="absolute inset-0 bg-pink-300/40 rounded-full blur-xl animate-pulse"></div>
+            <svg id="love-illustration" class="w-28 h-28 text-pink-500 relative z-10 drop-shadow-md transform transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+        </div>
+
+        <!-- Dynamic Question Text -->
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-3 tracking-tight">
+            Məni sevirsən? 💕
+        </h1>
+        <p id="sub-heading" class="text-gray-600 text-sm sm:text-base font-medium mb-8">
+            Səmimi cavab ver, incimərəm... 😉
+        </p>
+
+        <!-- Dynamic Dodge Message Tooltip -->
+        <div id="dodge-badge" class="h-8 mb-4 flex items-center justify-center opacity-0 transition-opacity duration-300">
+            <span id="dodge-text" class="bg-pink-100 text-pink-700 text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-full shadow-sm border border-pink-200 animate-bounce">
+                Qaçdım! 🏃‍♂️
+            </span>
+        </div>
+
+        <!-- Buttons Container -->
+        <div id="button-container" class="relative flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 min-h-[120px]">
+            <!-- YES Button -->
+            <button id="yes-btn" class="pulse-glow w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold text-lg sm:text-xl rounded-2xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 z-20 flex items-center justify-center gap-2">
+                <span>Hə, çox sevirəm!</span>
+                <i class="fa-solid fa-heart text-white animate-ping text-sm"></i>
+            </button>
+
+            <!-- NO Button (The evasive one) -->
+            <button id="no-btn" class="evasive-btn w-full sm:w-auto px-8 py-4 bg-white/80 hover:bg-white text-gray-700 font-bold text-lg sm:text-xl rounded-2xl shadow-md border border-gray-200/80 z-20 cursor-pointer">
+                Yox 😜
+            </button>
+        </div>
+    </main>
+
+    <!-- Celebration Modal Screen (Hidden initially) -->
+    <div id="celebration-screen" class="fixed inset-0 z-30 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-700 transform scale-90">
+        <div class="glass-card rounded-3xl p-8 sm:p-12 max-w-md w-full text-center relative border-2 border-pink-300 shadow-2xl">
+            <!-- Animated Cute Kiss / Hearts Icon -->
+            <div class="w-24 h-24 bg-pink-100 text-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
+                <i class="fa-solid fa-face-kiss-wink-heart text-5xl"></i>
+            </div>
+
+            <!-- Joyful Azerbaijani Messages -->
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-pink-600 mb-3 leading-tight">
+                Bilirdim ki, sevirsən! 🥰❤️
+            </h2>
+            <p class="text-gray-700 text-base sm:text-lg font-medium mb-6">
+                Mən də səni dünyalar qədər çox sevirəm! 💖✨<br>Səninlə hər anım bir nağıldır!
+            </p>
+
+            <div class="p-4 bg-pink-50/80 rounded-2xl border border-pink-100 mb-8">
+                <p class="text-pink-800 text-sm italic font-semibold">
+                    "Dünyanın ən gözəl seçimi idi! 😉🌸"
+                </p>
+            </div>
+
+            <!-- Action Buttons on Celebration -->
+            <div class="flex flex-col gap-3">
+                <button id="restart-btn" class="w-full py-3.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-all transform active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Yenidən soruş</span>
+                </button>
+                <button id="share-btn" class="w-full py-3 bg-white/80 hover:bg-white text-pink-600 font-semibold rounded-xl border border-pink-200 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-share-nodes"></i>
+                    <span>Eşqini paylaş 💌</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            /* Audio & sound synthesizer using Web Audio API */
+            let audioEnabled = true;
+            let audioCtx = null;
+
+            function initAudio() {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            // Synthesize happy chime sound for "Hə"
+            function playVictoryChime() {
+                if (!audioEnabled) return;
+                initAudio();
+
+                const now = audioCtx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; // C5, E5, G5, C6, E6
+                notes.forEach((freq, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + index * 0.08);
+
+                    gain.gain.setValueAtTime(0, now + index * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.2, now + index * 0.08 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.08 + 0.4);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(now + index * 0.08);
+                    osc.stop(now + index * 0.08 + 0.45);
+                });
+            }
+
+            // Synthesize playful boing/dodge sound for "Yox"
+            function playDodgeSound() {
+                if (!audioEnabled) return;
+                initAudio();
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.12);
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.12);
+            }
+
+            // Sound Toggle
+            const soundToggleBtn = document.getElementById('sound-toggle');
+            const soundIcon = document.getElementById('sound-icon');
+
+            soundToggleBtn.addEventListener('click', () => {
+                audioEnabled = !audioEnabled;
+                if (audioEnabled) {
+                    soundIcon.className = 'fa-solid fa-volume-high text-xl';
+                    soundToggleBtn.classList.remove('text-gray-400');
+                    soundToggleBtn.classList.add('text-pink-600');
+                } else {
+                    soundIcon.className = 'fa-solid fa-volume-xmark text-xl';
+                    soundToggleBtn.classList.remove('text-pink-600');
+                    soundToggleBtn.classList.add('text-gray-400');
+                }
+            });
+
+            const heartsContainer = document.getElementById('hearts-container');
+            const heartIcons = ['❤️', '💖', '💕', '💗', '💓', '🌸', '✨'];
+
+            function createFloatingHearts() {
+                const count = 20;
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => {
+                        const heart = document.createElement('div');
+                        heart.className = 'floating-heart text-xl sm:text-2xl';
+                        heart.innerText = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+                        heart.style.left = `${Math.random() * 100}%`;
+                        heart.style.animationDuration = `${6 + Math.random() * 8}s`;
+                        heart.style.animationDelay = `${Math.random() * 5}s`;
+                        heartsContainer.appendChild(heart);
+                    }, i * 200);
+                }
+            }
+            createFloatingHearts();
+
+            const noBtn = document.getElementById('no-btn');
+            const yesBtn = document.getElementById('yes-btn');
+            const dodgeBadge = document.getElementById('dodge-badge');
+            const dodgeText = document.getElementById('dodge-text');
+
+            const playfulPhrases = [
+                "Qaçdım! 🏃‍♂️",
+                "Yaxınlaşma! 😉",
+                "Tutabilməzsən! 😜",
+                "Hə-ni basmalısan! 💖",
+                "Sıxılarsan! 🚀",
+                "Səhv düymədir! 🙈",
+                "Hələ də cəhd edirsən? 😂",
+                "Seçim imkanın yoxdur! 💓",
+                "Bura yox! 🏃‍♀️",
+                "Tək cavab var: HƏ! 🥰"
+            ];
+
+            let phraseIndex = 0;
+            let isDetached = false;
+
+            function moveNoButton(e) {
+                // Play sound effect
+                playDodgeSound();
+
+                // If first movement, break out of layout flow to fixed positioning
+                if (!isDetached) {
+                    const rect = noBtn.getBoundingClientRect();
+                    noBtn.style.position = 'fixed';
+                    noBtn.style.left = `${rect.left}px`;
+                    noBtn.style.top = `${rect.top}px`;
+                    noBtn.style.width = `${rect.width}px`;
+                    isDetached = true;
+                }
+
+                const btnWidth = noBtn.offsetWidth;
+                const btnHeight = noBtn.offsetHeight;
+                const margin = 40; // Safety screen margin
+
+                // Viewport dimensions
+                const maxX = window.innerWidth - btnWidth - margin;
+                const maxY = window.innerHeight - btnHeight - margin;
+                const minX = margin;
+                const minY = margin;
+
+                let newX, newY;
+                let attempts = 0;
+
+                // Obtain cursor or touch coords if present
+                let pointerX = e ? (e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : null)) : null;
+                let pointerY = e ? (e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : null)) : null;
+
+                // Calculate next random position away from cursor
+                do {
+                    newX = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
+                    newY = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
+                    attempts++;
+                } while (
+                    pointerX !== null &&
+                    pointerY !== null &&
+                    Math.hypot(newX + btnWidth / 2 - pointerX, newY + btnHeight / 2 - pointerY) < 180 &&
+                    attempts < 20
+                );
+
+                // Apply dynamic styles for smooth glide
+                noBtn.style.left = `${newX}px`;
+                noBtn.style.top = `${newY}px`;
+
+                // Rotate slightly for playful effect
+                const randomRotate = (Math.random() - 0.5) * 30;
+                noBtn.style.transform = `scale(1.05) rotate(${randomRotate}deg)`;
+
+                // Update humorous dodge text
+                dodgeText.innerText = playfulPhrases[phraseIndex % playfulPhrases.length];
+                phraseIndex++;
+                dodgeBadge.style.opacity = '1';
+
+                // Enlarge "YES" button slightly to tempt user
+                const currentScale = parseFloat(yesBtn.getAttribute('data-scale') || '1');
+                if (currentScale < 1.4) {
+                    const nextScale = currentScale + 0.04;
+                    yesBtn.setAttribute('data-scale', nextScale);
+                    yesBtn.style.transform = `scale(${nextScale})`;
+                }
+            }
+
+            // Evasive Event Listeners covering Mouse, Pointer, and Touch
+            ['mouseenter', 'mouseover', 'pointerenter', 'touchstart', 'mousedown'].forEach(eventType => {
+                noBtn.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    moveNoButton(e);
+                }, { passive: false });
+            });
+
+            // Proximity check on desktop mouse movement for extra safety
+            document.addEventListener('mousemove', (e) => {
+                if (!isDetached) return;
+                const rect = noBtn.getBoundingClientRect();
+                const btnCenterX = rect.left + rect.width / 2;
+                const btnCenterY = rect.top + rect.height / 2;
+                const distance = Math.hypot(e.clientX - btnCenterX, e.clientY - btnCenterY);
+
+                // Teleport if mouse comes within 90px radius
+                if (distance < 90) {
+                    moveNoButton(e);
+                }
+            });
+
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            let confettiParticles = [];
+            let animationFrameId = null;
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Confetti {
+                constructor() {
+                    this.reset();
+                }
+
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height - canvas.height;
+                    this.size = Math.random() * 8 + 6;
+                    this.color = ['#ec4899', '#f43f5e', '#a855f7', '#3b82f6', '#10b981', '#f59e0b'][Math.floor(Math.random() * 6)];
+                    this.speedY = Math.random() * 3 + 2;
+                    this.speedX = Math.random() * 2 - 1;
+                    this.rotation = Math.random() * 360;
+                    this.rotationSpeed = Math.random() * 10 - 5;
+                    this.shape = Math.random() > 0.3 ? 'rect' : 'circle';
+                }
+
+                update() {
+                    this.y += this.speedY;
+                    this.x += this.speedX;
+                    this.rotation += this.rotationSpeed;
+
+                    if (this.y > canvas.height) {
+                        this.reset();
+                    }
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.translate(this.x, this.y);
+                    ctx.rotate((this.rotation * Math.PI) / 180);
+                    ctx.fillStyle = this.color;
+
+                    if (this.shape === 'rect') {
+                        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+            }
+
+            function startConfetti() {
+                confettiParticles = [];
+                for (let i = 0; i < 120; i++) {
+                    confettiParticles.push(new Confetti());
+                }
+
+                function render() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    confettiParticles.forEach(p => {
+                        p.update();
+                        p.draw();
+                    });
+                    animationFrameId = requestAnimationFrame(render);
+                }
+                render();
+            }
+
+            function stopConfetti() {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            const mainCard = document.getElementById('main-card');
+            const celebrationScreen = document.getElementById('celebration-screen');
+            const restartBtn = document.getElementById('restart-btn');
+            const shareBtn = document.getElementById('share-btn');
+
+            yesBtn.addEventListener('click', () => {
+                // Play music chime & spawn confetti
+                playVictoryChime();
+                startConfetti();
+
+                // Hide NO button completely
+                noBtn.style.display = 'none';
+
+                // Fade out main question card
+                mainCard.classList.add('opacity-0', 'scale-90', 'pointer-events-none');
+
+                // Fade in celebration screen
+                setTimeout(() => {
+                    mainCard.style.display = 'none';
+                    celebrationScreen.classList.remove('opacity-0', 'pointer-events-none', 'scale-90');
+                    celebrationScreen.classList.add('opacity-100', 'scale-100');
+                }, 400);
+            });
+
+            // Restart / Reset logic
+            restartBtn.addEventListener('click', () => {
+                stopConfetti();
+
+                // Reset celebration screen
+                celebrationScreen.classList.add('opacity-0', 'pointer-events-none', 'scale-90');
+                celebrationScreen.classList.remove('opacity-100', 'scale-100');
+
+                // Reset NO button state
+                noBtn.style.display = 'block';
+                noBtn.style.position = 'relative';
+                noBtn.style.left = 'auto';
+                noBtn.style.top = 'auto';
+                noBtn.style.transform = 'none';
+                isDetached = false;
+
+                // Reset YES button scale
+                yesBtn.setAttribute('data-scale', '1');
+                yesBtn.style.transform = 'scale(1)';
+
+                // Reset dodge badge
+                dodgeBadge.style.opacity = '0';
+                phraseIndex = 0;
+
+                // Reveal main card
+                setTimeout(() => {
+                    mainCard.style.display = 'block';
+                    mainCard.classList.remove('opacity-0', 'scale-90', 'pointer-events-none');
+                    mainCard.classList.add('opacity-100', 'scale-100');
+                }, 300);
+            });
+
+            // Share button mock functionality
+            shareBtn.addEventListener('click', () => {
+                const shareText = "Mən də səni çox sevirəm! 💕✨";
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'Məni sevirsən?',
+                        text: shareText,
+                        url: window.location.href,
+                    }).catch(() => {});
+                } else {
+                    // Clipboard fallback using document.execCommand
+                    const dummy = document.createElement('textarea');
+                    document.body.appendChild(dummy);
+                    dummy.value = shareText;
+                    dummy.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(dummy);
+
+                    // Show custom feedback
+                    const originalText = shareBtn.innerHTML;
+                    shareBtn.innerHTML = `<i class="fa-solid fa-check"></i> <span>Kopyalandı! ❤️️</span>`;
+                    setTimeout(() => {
+                        shareBtn.innerHTML = originalText;
+                    }, 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
